@@ -1,0 +1,49 @@
+name: Node CD
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest , macos-latest]
+        node-version: [14.x]
+    steps:
+    - uses: actions/checkout@v1
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - name: Installing dependencies
+      run: |
+        npm i
+    - name: Building the interface
+      run: |
+        npm run build:tasks
+        npm run build:webpack
+    - name: 'Creating release'
+      uses: marvinpinto/action-automatic-releases@latest
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          automatic_release_tag: ${{ steps.package-version.outputs.current-version}}
+          prerelease: true
+          title: "Unstable v${{ steps.package-version.outputs.current-version}}"
+    - name : Creating the installer
+      run: |
+        npm run build:electron
+      env:
+        CI: true
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+    - name : Building for RPM
+      if: ${{ runner.os == 'Linux' }}
+      run: |
+        npm run build:electron:rpm
+    - name: get-npm-version
+      id: package-version
+      uses: martinbeentjes/npm-get-version-action@master
+      env:
+        CI: true
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
