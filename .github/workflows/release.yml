@@ -25,13 +25,13 @@ jobs:
         npm run build:tasks
         npm run build:webpack
     - name: Get packageJSON version
-      id: package-version
-      uses: martinbeentjes/npm-get-version-action@master
+      id: package-node-version
+      uses: culshaw/read-package-node-version-actions@v1
     - name: 'Creating release'
       uses: marvinpinto/action-automatic-releases@latest
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        automatic_release_tag: ${{ steps.package-version.outputs.current-version}}
+        automatic_release_tag: ${{ steps.package-node-version.outputs.current-version }}
         prerelease: true
         title: "Unstable v${{ steps.package-version.outputs.current-version}}"
     - name : Creating the installer
