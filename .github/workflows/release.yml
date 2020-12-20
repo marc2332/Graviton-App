@@ -24,6 +24,9 @@ jobs:
       run: |
         npm run build:tasks
         npm run build:webpack
+    - name: Get packageJSON version
+      id: package-version
+      uses: martinbeentjes/npm-get-version-action@master
     - name: 'Creating release'
       uses: marvinpinto/action-automatic-releases@latest
       with:
@@ -41,9 +44,6 @@ jobs:
       if: ${{ runner.os == 'Linux' }}
       run: |
         npm run build:electron:rpm
-    - name: get-npm-version
-      id: package-version
-      uses: martinbeentjes/npm-get-version-action@master
       env:
         CI: true
         GH_TOKEN: ${{ secrets.GH_TOKEN }}
