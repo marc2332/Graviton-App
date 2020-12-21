@@ -235,7 +235,9 @@
 				"role": "Viewer"
 			}
 		],
-		"provider":"github",
-		"releaseType":"pre-release"
+		"publish":{
+			"provider":"github",
+			"releaseType":"pre-release"
+		}
 	}
 }
