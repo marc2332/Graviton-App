@@ -34,7 +34,7 @@ jobs:
       with:
         tag_name: "v${{ steps.package-node-version.outputs.version}}"
         release_name: ${{ steps.package-node-version.outputs.version}}
-        body_path: ./release_description.md
+        body_path: ./RELEASE_CHANGELOG.md
         draft: false
         prerelease: true
     - name : Creating the installer
