@@ -1,8 +1,8 @@
 name: Node CD
 
 on:
-  push:
-    branches: [ master ]
+  schedule:    
+   - cron: "0 15 * * 0"
 
 jobs:
   release:
@@ -23,7 +23,7 @@ jobs:
       with:
         tag_name: "v${{ steps.package-node-version.outputs.version}}"
         release_name: ${{ steps.package-node-version.outputs.version}}
-        body_path: ./RELEASE_CHANGELOG.md
+        body: Release for Graviton Editor v${{ steps.package-node-version.outputs.version}}
         draft: false
         prerelease: true
   build:
