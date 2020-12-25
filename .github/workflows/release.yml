@@ -28,12 +28,15 @@ jobs:
       id: package-node-version
       uses: culshaw/read-package-node-version-actions@v1
     - name: 'Creating release'
-      uses: marvinpinto/action-automatic-releases@latest
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        automatic_release_tag: "v${{ steps.package-node-version.outputs.version}}"
+        tag_name: "v${{ steps.package-node-version.outputs.version}}"
+        release_name: ${{ steps.package-node-version.outputs.version}}
+        body_path: ./release_description.md
+        draft: false
         prerelease: true
-        title: ${{ steps.package-node-version.outputs.version}}
     - name : Creating the installer
       run: |
         npm run build:electron
