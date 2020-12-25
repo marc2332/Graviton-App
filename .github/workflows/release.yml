@@ -5,6 +5,27 @@ on:
     branches: [ master ]
 
 jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - name: Get packageJSON version
+      id: package-node-version
+      uses: culshaw/read-package-node-version-actions@v1
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: "v${{ steps.package-node-version.outputs.version}}"
+        release_name: ${{ steps.package-node-version.outputs.version}}
+        body_path: ./RELEASE_CHANGELOG.md
+        draft: false
+        prerelease: true
   build:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -24,19 +45,6 @@ jobs:
       run: |
         npm run build:tasks
         npm run build:webpack
-    - name: Get packageJSON version
-      id: package-node-version
-      uses: culshaw/read-package-node-version-actions@v1
-    - name: 'Creating release'
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: "v${{ steps.package-node-version.outputs.version}}"
-        release_name: ${{ steps.package-node-version.outputs.version}}
-        body_path: ./RELEASE_CHANGELOG.md
-        draft: false
-        prerelease: true
     - name : Creating the installer
       run: |
         npm run build:electron
