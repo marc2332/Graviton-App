@@ -27,7 +27,7 @@ jobs:
         body: Release for Graviton Editor v${{ steps.package-node-version.outputs.version}}
         draft: false
         prerelease: true
-  build:
+  buildElectron:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -56,3 +56,22 @@ jobs:
       env:
         CI: true
         GH_TOKEN: ${{ secrets.GH_TOKEN }}
+  buildServer:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - name: Installing dependencies
+      run: yarn
+    - name: Building the binaries
+      run: package:server
+    - name: Upload binaries
+      uses: actions/upload-artifact@v2
+      with:
+        path: |
+          dist/Graviton-Server_Linux
+          dist/Graviton-Server_MacOS
+          dist/Graviton-Server_Windows
