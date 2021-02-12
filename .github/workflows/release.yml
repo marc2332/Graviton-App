@@ -71,13 +71,12 @@ jobs:
       run: yarn build:server
     - name: Building the binaries
       run: yarn package:server
+    - name: Get packageJSON version
+      id: package-node-version
+      uses: culshaw/read-package-node-version-actions@v1
     - name: Upload binaries
-      uses: meeDamian/github-release@2.0
+      uses: AButler/upload-release-assets@v2.0
       with:
-        token: ${{ secrets.GH_TOKEN }}
-        tag: "v${{ steps.package-node-version.outputs.version}}"
-        allow_override: true
-        files: >
-          dist/Graviton-Server_Linux
-          dist/Graviton-Server_MacOS
-          dist/Graviton-Server_Windows.exe
+        repo-token: ${{ secrets.GH_TOKEN }}
+        release-tag: "v${{ steps.package-node-version.outputs.version}}"
+        files: Graviton-Server*
