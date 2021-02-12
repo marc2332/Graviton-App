@@ -67,7 +67,7 @@ jobs:
     - name: Installing dependencies
       run: yarn
     - name: Building the binaries
-      run: package:server
+      run: yarn package:server
     - name: Upload binaries
       uses: actions/upload-artifact@v2
       with:
