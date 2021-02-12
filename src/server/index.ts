@@ -12,11 +12,7 @@ enableWs(app)
 
 app.use(morgan('dev'))
 
-app.get('/api', (req, res) => {
-	res.json({
-		ok: true,
-	})
-})
+app.use('/', express.static(path.resolve(__dirname, '..', 'dist_browser')))
 
 /*
  * Check if a path is a folder or not
@@ -83,13 +79,27 @@ app.ws('/api/ws', ws => {
 				break
 			case 'info':
 				fs.lstat(messageObject.data.path, (err, data) => {
-					sendMessage({
-						type: 'returnedInfo',
-						data: {
-							path: messageObject.data.path,
-							info: data,
-						},
-					})
+					if (err) {
+						sendMessage({
+							type: 'returnedInfo',
+							data: {
+								path: messageObject.data.path,
+								error: true,
+							},
+						})
+					} else {
+						sendMessage({
+							type: 'returnedInfo',
+							data: {
+								path: messageObject.data.path,
+								info: {
+									...data,
+									isDirectory: data.isDirectory(),
+									isFile: data.isFile(),
+								},
+							},
+						})
+					}
 				})
 				break
 			case 'renameDir':
@@ -140,6 +150,17 @@ app.ws('/api/ws', ws => {
 	})
 })
 
-app.listen(PORT, () => {
-	console.log(`Listening on port ${PORT}`)
-})
+app.listen(
+	PORT,
+	{
+		host: '0.0.0.0',
+	},
+	() => {
+		console.log(`
+			\r Serving Graviton Server and Browser in port ${PORT}
+			\n 
+			\r NOTE: Be aware that Graviton Server is not completely secure, therefore is not recommended for public usage.
+			\r You can discuss in: https://github.com/Graviton-Code-Editor/Graviton-App/discussions
+		`)
+	},
+)

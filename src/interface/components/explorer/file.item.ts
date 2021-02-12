@@ -16,9 +16,7 @@ import normalizeDir from '../../utils/directory_normalizer'
 import Notification from '../../constructors/notification'
 import FileItem from './file.item.style'
 import Core from 'Core'
-const {
-	electron: { clipboard },
-} = Core
+const { clipboard } = Core
 import * as path from 'path'
 import PuffinElement from '../../types/puffin.element'
 import { PuffinState } from '../../types/puffin.state'
@@ -291,6 +289,12 @@ class Item {
 				},
 			]
 
+			// Remove OpenLocation button in BrowserMode
+			if (RunningConfig.data.isBrowser) {
+				folderContextMenu.splice(8, 1)
+			}
+
+			// Add "Remove from workspace" option when it's the folder of a project (top-folder)
 			if (this.itemLevel === 0) {
 				folderContextMenu.splice(7, 0, {
 					label: 'misc.RemoveFromWorkspace',
@@ -308,35 +312,42 @@ class Item {
 				event,
 			})
 		} else {
+			const fileContextMenu = [
+				{
+					label: 'misc.Rename',
+					action: () => {
+						this._rename()
+					},
+				},
+				{},
+				{
+					label: 'misc.Remove',
+					action: () => {
+						this._remove()
+					},
+				},
+				{},
+				{
+					label: 'misc.CopyPath',
+					action: () => {
+						clipboard.writeText(this.itemPath)
+					},
+				},
+				{
+					label: 'misc.OpenLocation',
+					action: () => {
+						openLocation(this.itemFolder)
+					},
+				},
+			]
+
+			// Remove OpenLocation button in BrowserMode
+			if (RunningConfig.data.isBrowser) {
+				fileContextMenu.splice(5, 1)
+			}
+
 			new ContextMenu({
-				list: [
-					{
-						label: 'misc.Rename',
-						action: () => {
-							this._rename()
-						},
-					},
-					{},
-					{
-						label: 'misc.Remove',
-						action: () => {
-							this._remove()
-						},
-					},
-					{},
-					{
-						label: 'misc.CopyPath',
-						action: () => {
-							clipboard.writeText(this.itemPath)
-						},
-					},
-					{
-						label: 'misc.OpenLocation',
-						action: () => {
-							openLocation(this.itemFolder)
-						},
-					},
-				],
+				list: fileContextMenu,
 				parent: this.itemElement,
 				event,
 			})

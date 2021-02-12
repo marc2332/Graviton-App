@@ -12,8 +12,8 @@ import { WindowOptions } from '../types/window'
 
 class Window {
 	private WindowComponent: object
-	private WindowElement: PuffinElement
-	private WindowState: PuffinState
+	public WindowElement: PuffinElement
+	public WindowState: PuffinState
 	/**
 	 *  Initializes a Graviton window.
 	 *
@@ -40,7 +40,7 @@ class Window {
 			addons: [lang(LanguageState)],
 		})`
 		<WindowContainer id="${id}" win-title="${title}" class="window" closeWindowExternally="${closeWindowExternally}">
-			<WindowBackground closeWindow=${closeWindowExternally}/>
+			<WindowBackground closeWindow="${closeWindowExternally}"/>
 			<WindowBody style="min-width:${minWidth};min-height:${minHeight};height:${height};width:${width};">
 				<externalComponent/>
 			</WindowBody>

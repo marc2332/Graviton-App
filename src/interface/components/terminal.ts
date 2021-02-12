@@ -24,6 +24,7 @@ const styled = style`
 	max-height: 100%;
 	min-height: 100%;
 	overflow: hidden;
+	padding: 4px;
 	& p{
 		color: var(--textColor);
 		font-size: 13px;
@@ -55,7 +56,6 @@ const styled = style`
 		height: 30px;
 		padding: 5px;
 		display: flex;
-
 		& > button {
 			flex: 1;
 			min-width: 40px;
@@ -160,7 +160,7 @@ const getConfig = () => {
 	}
 }
 
-const DefaultText = () => element`<p>Press the + to create a session</p>`
+const DefaultText = () => element`<p id="terminal_tip">Press the + to create a session</p>`
 
 export default function TerminalComp() {
 	function TerminalMounted() {
@@ -289,7 +289,7 @@ function XtermTerminal({ shell = null } = {}) {
 				xtermState.emit('keyPressed', e.key)
 			})
 
-			const resizingWatchers = RunningConfig.on(['sidePanelHasBeenResized', 'mainBoxHasBeenResized'], () => {
+			const resizingWatchers = RunningConfig.on<any>(['sidePanelHasBeenResized', 'mainBoxHasBeenResized'], () => {
 				// Force resizing when the sidepanel of the mainbox gets resized
 				fit.fit()
 			})
@@ -364,7 +364,7 @@ function TerminalBar() {
 	}
 
 	function mountedSelect() {
-		RunningConfig.on(['aTerminalHasBeenCreated', 'aTerminalHasBeenClosed'], () => {
+		RunningConfig.on<any>(['aTerminalHasBeenCreated', 'aTerminalHasBeenClosed'], () => {
 			//Terminal was created
 			this.update()
 		})
@@ -372,13 +372,15 @@ function TerminalBar() {
 
 	function createTerminal() {
 		const container = document.getElementById('terms_stack')
-		if (container.innerText !== '') container.innerText = ''
+		const terminalTip = document.getElementById('terminal_tip')
+		if (terminalTip != null) terminalTip.remove()
 		render(XtermTerminal(), container)
 	}
 
 	RunningConfig.on('createTerminalSession', ({ shell }) => {
 		const container = document.getElementById('terms_stack')
-		if (container.innerText !== '') container.innerText = ''
+		const terminalTip = document.getElementById('terminal_tip')
+		if (terminalTip != null) terminalTip.remove()
 		render(
 			XtermTerminal({
 				shell,
@@ -413,7 +415,7 @@ function TerminalBar() {
 	})`
 		<div class="bar">
 			<select :change="${onChange}" mounted="${mountedSelect}">
-				${() => RunningConfig.data.openedTerminals.map(({ name }) => element`<option selected="${name === RunningConfig.data.focusedTerminal}">${name}</option>`)}
+				${() => RunningConfig.data.openedTerminals.map(({ name }) => element`<option ${name === RunningConfig.data.focusedTerminal ? 'selected=' : ''}>${name}</option>`)}
 			</select>
 			<ButtonIcon :click="${closeTerminal}">
 				<CrossIcon/>

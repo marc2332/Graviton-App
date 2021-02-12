@@ -9,11 +9,9 @@ import { element, render, lang } from '@mkenzo_8/puffin'
 import { Text, Button } from '@mkenzo_8/puffin-drac'
 import { css as style } from '@emotion/css'
 import { LanguageState } from 'LanguageConfig'
-import { LargeFileLinesLength } from 'Constants'
+import { LargeFileLinesLength, LargeFileCharsLength } from 'Constants'
 import Core from 'Core'
-const {
-	electron: { clipboard },
-} = Core
+const { clipboard } = Core
 
 import { EditorOptions } from 'Types/editor'
 import { EditorClient } from 'Types/editorclient'
@@ -48,7 +46,7 @@ class Editor implements EditorOptions {
 				theme,
 				error: 'This is a binary file.',
 			})
-		} else if (value.split('\n').length > LargeFileLinesLength) {
+		} else if (this.client.type === 'editor' && (value.split('\n').length > LargeFileLinesLength || value.length > LargeFileCharsLength)) {
 			this.createCustomClient({
 				value,
 				theme,
@@ -223,6 +221,13 @@ class Editor implements EditorOptions {
 			})
 		})
 
+		const editorFoldToggledWatcher = StaticConfig.keyChanged('editorFold', value => {
+			this.client.do('toggleFold', {
+				instance: this.instance,
+				value,
+			})
+		})
+
 		this.tabState.emit('editorCreated', {
 			client: this.client,
 			instance: this.instance,
@@ -239,6 +244,7 @@ class Editor implements EditorOptions {
 			editorFontFamilyWatcher.cancel()
 			editorWrapLinesWatcher.cancel()
 			mainboxResizedWatcher.cancel()
+			editorFoldToggledWatcher.cancel()
 			if (RunningConfig.data.focusedEditor?.instance === this.instance) {
 				RunningConfig.data.focusedEditor = null
 			}
@@ -248,13 +254,13 @@ class Editor implements EditorOptions {
 		const getContextMenuDefaultButtons = () => [
 			{
 				label: 'misc.Copy',
-				action: () => {
+				action: async () => {
 					const selectedText = this.client.do('getSelection', {
 						instance: this.instance,
 						action: () => RunningConfig.emit('hideAllFloatingComps'),
 					})
 
-					clipboard.writeText(selectedText)
+					await clipboard.writeText(selectedText)
 
 					RunningConfig.emit('writeToClipboard', selectedText)
 
@@ -267,7 +273,7 @@ class Editor implements EditorOptions {
 			},
 			{
 				label: 'misc.Paste',
-				action: () => {
+				action: async () => {
 					const { line, ch } = this.client.do('getCursorPosition', {
 						instance: this.instance,
 					})
@@ -278,7 +284,7 @@ class Editor implements EditorOptions {
 							line: line - 1,
 							ch: ch - 1,
 						},
-						text: clipboard.readText(),
+						text: await clipboard.readText(),
 					})
 
 					setTimeout(() => {

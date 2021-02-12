@@ -1,5 +1,5 @@
 import TabBody from '../components/panel/tab'
-import TabEditor from '../components/panel/tab.editor'
+import TabEditor from '../components/panel/tab_editor'
 import { state, element, render } from '@mkenzo_8/puffin'
 import RunningConfig from 'RunningConfig'
 import Cross from '../components/icons/cross'
@@ -10,6 +10,7 @@ import getFormat from '../utils/format_parser'
 import PuffinElement from '../types/puffin.element'
 import { PuffinState } from '../types/puffin.state'
 import { TabOptions } from '../types/tab'
+import { getFileIcon } from '../utils/get_file_icon'
 import path from 'path'
 
 class Tab {
@@ -65,17 +66,19 @@ class Tab {
 			components: {
 				TabBody,
 				Cross,
+				UnSavedIcon,
 			},
 		})`
 		<TabBody title="${title}" mounted="${mounted}" active="${() => this.tabState.data.active}"  draggable="true" classSelector="${this.classSelector}" class="${
 			this.classSelector
-		}" :dragstart="${startDrag}" :click="${focusTab}" :mouseover="${showCross}" :mouseleave="${hideCross}" :dragenter="${dragEnter}" :dragleave="${dragLeave}" :drop="${onDropped}">
+		}" :dragstart="${startDrag}" :mousedown="${closeTabFromMiddleLick}" :click="${focusTab}" :mouseover="${showCross}" :mouseleave="${hideCross}" :dragenter="${dragEnter}" :dragleave="${dragLeave}" :drop="${onDropped}">
 			${this.itemIconSource ? element`<img class="tab-icon" src="${this.itemIconSource}"/>` : element`<div/>`}
 			<p :drop="${onDropped}" classSelector="${this.classSelector}">
 				${title}
 			</p>
 			<div class="tab-button" :drop="${onDropped}" classSelector="${this.classSelector}">
-				<Cross draggable="false" class="tab-cross" :drop="${onDropped}" classSelector="${this.classSelector}" style="opacity:0;" :click="${closeTab}"></Cross>
+				<Cross draggable="false" class="tab-cross" :drop="${onDropped}" classSelector="${this.classSelector}" style="opacity:0;" :mousedown="${closeTabFromMiddleLick}" :click="${closeTab}"></Cross>
+				<UnSavedIcon draggable="false" style="display: none;" classSelector="${this.classSelector}"  :click="${closeTab}"></UnSavedIcon>
 			</div>
 		</TabBody>
 		`
@@ -105,9 +108,15 @@ class Tab {
 			}
 			e.dataTransfer.setData('classSelectorForNext', classSelectorForNext)
 		}
-		function focusTab(): void {
+		function focusTab(e: MouseEvent): void {
 			self.tabState.emit('focusedMe')
 			self.tabState.emit('focusedItem')
+		}
+
+		function closeTabFromMiddleLick(e: MouseEvent): void {
+			if (e.which == 2) {
+				self.tabState.emit('close')
+			}
 		}
 		function closeTab(e: MouseEvent): void {
 			e.stopPropagation()
@@ -212,7 +221,7 @@ class Tab {
 	 * Remove the tab's DOM node
 	 */
 	private _removeElements() {
-		return new Promise(res => {
+		return new Promise<void>(res => {
 			setTimeout(() => {
 				this.tabElement.remove()
 				this.bodyElement.remove()
@@ -318,7 +327,7 @@ class Tab {
 			} else {
 				if (!closeDialogOpened) {
 					closeDialogOpened = true
-					WarningDialog()
+					WarningDialog(`You are about to lose changes in '${this.tabState.data.title}' .`)
 						.then(async () => {
 							this.tabElement.classList.add('closing')
 							this.bodyElement.classList.add('closing')
@@ -347,6 +356,11 @@ class Tab {
 			changedPanelListener.cancel()
 			IconpackWatcher.cancel()
 			closedListener.cancel()
+			if (this.client) {
+				this.client.do('close', {
+					instance: this.instance,
+				})
+			}
 			RunningConfig.emit('aTabHasBeenClosed', {
 				tabElement: this.tabElement,
 				directory: this.directory,
@@ -369,7 +383,7 @@ class Tab {
 	 */
 	private _toggleTabStatus(newStatus: boolean): void {
 		const tabCrossIcon = <PuffinElement>this.tabElement.getElementsByClassName('tab-cross')[0]
-		const tabSaveIcon = this.tabElement.getElementsByClassName('tab-save')[0]
+		const tabSaveIcon = <PuffinElement>this.tabElement.getElementsByClassName('tab-save')[0]
 		if (newStatus) {
 			if (!this.tabElement.state.data.saved) {
 				this.saveTab(() => {
@@ -378,29 +392,17 @@ class Tab {
 						parentFolder: this.tabElement.state.data.parentFolder,
 					})
 					tabCrossIcon.style.display = 'block'
-					if (tabSaveIcon) tabSaveIcon.remove()
+					tabSaveIcon.style.display = 'none'
 					this.tabElement.state.data.saved = true
 				})
 			} else {
 				tabCrossIcon.style.display = 'block'
-				if (tabSaveIcon) tabSaveIcon.remove()
+				tabSaveIcon.style.display = 'none'
 			}
 		} else if (this.tabElement.state.data.saved) {
 			this.tabElement.state.data.saved = false
 			tabCrossIcon.style.display = 'none'
-
-			const tryToClose = () => {
-				this.tabElement.state.emit('close')
-			}
-
-			const comp = element({
-				components: {
-					UnSavedIcon,
-				},
-			})`
-				<UnSavedIcon :click="${tryToClose}"></UnSavedIcon>
-			`
-			render(comp, this.tabElement.children[2])
+			tabSaveIcon.style.display = 'block'
 		}
 	}
 	/*
@@ -477,20 +479,6 @@ function guessTabPosition(tab: HTMLElement, tabsBar: HTMLElement): number {
 		}
 	})
 	return Number(res)
-}
-
-function getFileIcon(fileName: string, fileExt: string): void {
-	if (fileExt === ('png' || 'jpg' || 'ico')) {
-		return RunningConfig.data.iconpack.image || RunningConfig.data.iconpack['unknown.file']
-	}
-	if (RunningConfig.data.iconpack[`file.${fileName}`]) {
-		return RunningConfig.data.iconpack[`file.${fileName}`]
-	}
-	if (RunningConfig.data.iconpack[`${fileExt}.lang`]) {
-		return RunningConfig.data.iconpack[`${fileExt}.lang`]
-	} else {
-		return RunningConfig.data.iconpack['unknown.file']
-	}
 }
 
 export default Tab

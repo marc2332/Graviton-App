@@ -7,7 +7,7 @@
 [![Build Status](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2FGraviton-Code-Editor%2FGraviton-App%2Fbadge%3Fref%3Dmaster&style=flat)](https://actions-badge.atrox.dev/Graviton-Code-Editor/Graviton-App/goto?ref=master)
 [![HitCount](http://hits.dwyl.io/https://github.com/marc2332/https://github.com/Graviton-Code-Editor/Graviton-App.svg)](http://hits.dwyl.io/https://github.com/marc2332/https://github.com/Graviton-Code-Editor/Graviton-App)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/Graviton-Code-Editor/Graviton-App/blob/master/LICENSE.md)
-![GitHub All Releases](https://img.shields.io/github/downloads/Graviton-Code-Editor/Graviton-App/total.svg?style=plastic)
+![GitHub All Releases](https://img.shields.io/github/downloads/Graviton-Code-Editor/Graviton-App/total.svg)
 ![Commits](https://img.shields.io/github/commit-activity/m/Graviton-Code-Editor/Graviton-App)
 ![GitHub package.json version](https://img.shields.io/github/package-json/v/Graviton-Code-Editor/Graviton-App.svg)
 [![GitHub contributors](https://img.shields.io/github/contributors/Graviton-Code-Editor/Graviton-App.svg)](https://GitHub.com/Graviton-Code-Editor/Graviton-App/graphs/contributors/)
@@ -16,7 +16,8 @@
 
 Graviton is a **open source**, **cross-platform**, **minimalist-looking** code editor.
 
-You can download it for **Windows**, **MacOS**, and **GNU/Linux** from [Releases](https://github.com/Graviton-Code-Editor/Graviton-App/releases), or try the **experimental** [Online Version](https://graviton.netlify.app/browser).
+You can download it for **Windows**, **MacOS**, and **GNU/Linux** from [Graviton's Website](https://graviton.netlify.app/download), or try the **experimental** [Online Version](https://graviton.netlify.app/browser).
+You can also download weekly (probably unstable) releases from the [Releases](https://github.com/Graviton-Code-Editor/Graviton-App/releases) section.
 
 ![example screenshot](example.png)
 

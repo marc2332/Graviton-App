@@ -1,5 +1,6 @@
 import { element } from '@mkenzo_8/puffin'
 import { css as style } from '@emotion/css'
+import StaticConfig from 'StaticConfig'
 
 const styleWrapper = style`
 		& > div{
@@ -28,9 +29,6 @@ const styleWrapper = style`
 				& #panels_stack > div:nth-child(1){
 					border-top-left-radius:8px;
 					border-left:transparent;
-				}
-				&  .tabsbar > div:nth-last-child(1){
-					border-top-right-radius:5px;
 				}
 			}
 		}
@@ -68,7 +66,7 @@ const styleWrapper = style`
 		#sidepanel{
 			background:var(--bodyBackground);
 			min-width:50px;
-			width:35%;
+			width: ${StaticConfig.data.appCache.sidePanelWidth};
 			max-height:100%;
 			overflow:auto;
 			float: left;
@@ -87,6 +85,7 @@ const styleWrapper = style`
 			display: flex;
 			flex:1;
 			background:var(--mainpanelBackground);
+			border-left:1px solid var(--panelBorder);
 			&[blocked="true"]{
 				border-top-left-radius: 0px;
 			}
@@ -99,6 +98,9 @@ const styleWrapper = style`
 				height:  100%;
 				max-height: 100%;
 				flex-direction:columns;
+				& > div:nth-child(1) {
+					border: none;
+				}
 			}
 		}
 		#windows{

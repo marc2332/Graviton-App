@@ -12,6 +12,9 @@ import storeButton from './button'
 import Notification from '../../constructors/notification'
 import getCompatibleRelease from '../../defaults/store/utils/get.compatible.release'
 import DefaultPluginIcon from '../icons/plugin_store'
+import * as path from 'path'
+import PuffinElement from 'Types/puffin.element'
+import getLocalPluginById from '../../defaults/store/utils/get.local.plugin'
 
 const styleWrapper = style`
 	& .content {
@@ -26,12 +29,10 @@ const styleWrapper = style`
 		& > .horizontal_view {
 			display: flex;
 			& .buttons {
-				flex: 1;
-				display: flex;
-				justify-content: center;
-				align-items: center;
 				max-height: 145px;
 				text-align: center;
+				display: flex;
+				justify-content: flex-start;
 				& button {
 					max-width: 150px;
 				}
@@ -41,6 +42,9 @@ const styleWrapper = style`
 				align-items:flex-start;
 				& h2 {
 					margin-top: 10px;
+					& span {
+						font-weight: normal;
+					}
 				}
 				& > div > * {
 					margin-left: 2px;
@@ -84,6 +88,7 @@ class pluginWindow {
 	lastReleaseTarget: string = 'Unknown'
 	lastRelease: any
 	hasAnyUpdate: boolean
+	pluginWindow: Window
 
 	remotePackage: any
 	localPackage: any
@@ -119,17 +124,20 @@ class pluginWindow {
 							<div class="title">
 								<Icon class="plugin_icon"/>
 								<div>
-									<H2>${this.usefulPackage.name}</H2>
+									<H2>
+										${this.usefulPackage.name}
+										<span>
+											${this.usefulPackage.version ? ` v${this.usefulPackage.version}` : ''}
+										</span>
+									</H2>
 									<Text class="author" lang-string="misc.By" string="{{misc.By}} ${this.usefulPackage.author}"/>
-									<span>
-										${this.usefulPackage.version ? `v${this.usefulPackage.version}` : ''}
-									</span>
+									<div class="buttons">
+										${() => this.getUpdateButton()}
+										${() => this.getUninstallButton() || this.getInstallButton() || element`<div/>`}
+									</div>
 								</div>
 							</div>
-							<div class="buttons">
-								${this.getUpdateButton()}
-								${this.getUninstallButton() || this.getInstallButton() || element`<div/>`}
-							</div>
+							
 						</div>
 						<Text class="description">
 							${this.usefulPackage.description}
@@ -141,7 +149,7 @@ class pluginWindow {
 		</SideMenu>
 		`
 
-		const pluginWindow = new Window({
+		this.pluginWindow = new Window({
 			component: () => component,
 			minWidth: '300px',
 			minHeight: '250px',
@@ -149,7 +157,7 @@ class pluginWindow {
 			width: '70%',
 		})
 
-		pluginWindow.launch()
+		this.pluginWindow.launch()
 	}
 	init() {
 		this.usefulPackage = Object.assign({}, this.remotePackage, this.localPackage)
@@ -166,8 +174,11 @@ class pluginWindow {
 		}
 	}
 	getPluginIcon() {
-		if (this.usefulPackage.plugin) {
-			//WIP
+		if (this.usefulPackage.icon) {
+			const iconPath = path.join(this.usefulPackage.PATH, this.usefulPackage.icon)
+			return () => element`
+				<img src="${iconPath}"/>
+			`
 		} else {
 			//Fallback icon
 			return DefaultPluginIcon
@@ -225,12 +236,32 @@ class pluginWindow {
 			release: this.lastRelease.url,
 		}).then(() => {
 			pluginInstalledNotification(this.usefulPackage.name)
+
+			this.isInstalled = true
+
+			this.refreshAfterBeingInstalled()
+
+			const buttonsContainer = <PuffinElement>this.pluginWindow.WindowElement.getElementsByClassName('buttons')[0]
+
+			buttonsContainer.update()
 		})
 	}
 	uninstall() {
 		uninstallPlugin(this.usefulPackage).then(() => {
 			pluginUninstalledNotification(this.usefulPackage.name)
+
+			this.isInstalled = false
+
+			this.refreshAfterBeingInstalled()
+
+			const buttonsContainer = <PuffinElement>this.pluginWindow.WindowElement.getElementsByClassName('buttons')[0]
+
+			buttonsContainer.update()
 		})
+	}
+	refreshAfterBeingInstalled() {
+		this.localPackage = getLocalPluginById(this.remotePackage.id)
+		this.init()
 	}
 }
 

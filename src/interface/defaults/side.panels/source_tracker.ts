@@ -4,7 +4,7 @@ import SidePanel from '../../constructors/side.panel'
 import Explorer from '../../constructors/explorer'
 import { basename, parse } from 'path'
 import { getFileIconType } from '../../utils/get_file_icon'
-import { Input, Titles, Button } from '@mkenzo_8/puffin-drac'
+import { Input, Titles, Button, Text } from '@mkenzo_8/puffin-drac'
 import ContextMenu from '../../constructors/contextmenu'
 import EmojiConvertor from 'emoji-js'
 import GitIcon from '../../components/icons/git'
@@ -12,6 +12,8 @@ import StaticConfig from 'StaticConfig'
 import InputDialog from '../../utils/dialogs/dialog_input'
 import Notification from 'Constructors/notification'
 import * as path from 'path'
+import { css as style } from '@emotion/css'
+import ContainerPanel from '../../components/container_panel'
 
 /*
  * Return total count of changes, if is bigger than 25, return "25+"
@@ -143,6 +145,8 @@ if (!RunningConfig.data.isBrowser && StaticConfig.data.experimentalSourceTracker
 				 */
 				const loadedGitRepoListener = RunningConfig.on('loadedGitRepo', async ({ parentFolder, gitChanges, anyChanges, explorerProvider }) => {
 					if (folderPath !== parentFolder) return
+					//Hide "No repository open" message
+					this.setAttribute('empty', 'false')
 					//Load the current commits
 					let { all: allCommits } = await explorerProvider.getGitAllCommits(parentFolder)
 
@@ -192,7 +196,7 @@ if (!RunningConfig.data.isBrowser && StaticConfig.data.experimentalSourceTracker
 								label: basename(folderPath),
 								icon: 'folder.closed',
 								decorator: {
-									label: gitChanges.files.length == '0' ? 'Any' : gitChanges.files.length,
+									label: gitChanges.files.length == 0 ? 'Any' : gitChanges.files.length.toString(),
 									color: 'var(--explorerItemGitIndicatorText)',
 									background: 'var(--explorerItemGitNotAddedText)',
 								},
@@ -396,7 +400,16 @@ if (!RunningConfig.data.isBrowser && StaticConfig.data.experimentalSourceTracker
 				return GitIcon()
 			},
 			panel() {
-				return element`<div mounted="${mounted}"/>`
+				return element({
+					components: {
+						Text,
+						ContainerPanel,
+					},
+				})`
+				<ContainerPanel mounted="${mounted}" empty="true">
+					<Text lang-string="sidepanels.sourceTracker.noRepositoryOpen"></Text>
+				</ContainerPanel>
+				`
 			},
 			hint: 'Source Tracker',
 		})

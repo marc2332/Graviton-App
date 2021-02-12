@@ -18,6 +18,8 @@ const remotePluginTemp = path.resolve(__dirname, '..', 'temp_remote_plugin')
 
 const buildData = {
 	date: new Date().toDateString(),
+	channelBuild: global.channel || 'dev',
+	env: process.env.NODE_ENV || 'production',
 }
 
 function createBuildFile(cb) {
@@ -92,7 +94,7 @@ async function pluginsSDK(cb) {
 			distPath: path.join(pluginsDistFolder, pluginName),
 		})
 		await bundle.bundle().then(err => {
-			if (err) console.log(err)
+			if (err) throw err
 		})
 		await bundle.copyAssets()
 		if (pluginsFolders.length - 1 === i) {
@@ -118,7 +120,8 @@ async function pluginsTasks(cb) {
 }
 
 async function copyLSPCMIcons(cb) {
-	ncp(path.join(__dirname, 'node_modules/lsp-codemirror/lib/icons'), path.join(__dirname, 'dist_ui', 'icons'), () => {
+	ncp(path.join(__dirname, '..', 'node_modules/lsp-codemirror/lib/icons'), path.join(__dirname, '..', 'dist_ui', 'icons'), err => {
+		if (err) throw err
 		cb()
 	})
 }
@@ -146,28 +149,36 @@ async function cloneRemotePlugin(cb) {
 	})
 }
 
-async function installRemoteDeps(cb) {
-	exec(
-		'npm install',
-		{
+function installRemoteDeps(cb) {
+	const installProcess = spawn('npm', ['install'], {
+		cwd: remotePluginTemp,
+		shell: true,
+	})
+
+	installProcess.on('close', (err, output) => {
+		if (err === 1) console.log(output)
+		const installDevProcess = spawn('npm', ['install', '--only=dev'], {
 			cwd: remotePluginTemp,
-		},
-		() => {
+			shell: true,
+		})
+
+		installDevProcess.on('close', (err, output) => {
+			if (err === 1) console.log(output)
 			cb()
-		},
-	)
+		})
+	})
 }
 
 async function buildRemote(cb) {
-	exec(
-		'npm run build',
-		{
-			cwd: remotePluginTemp,
-		},
-		() => {
-			cb()
-		},
-	)
+	const buildProcess = spawn('npm', ['run build'], {
+		cwd: remotePluginTemp,
+		shell: true,
+	})
+
+	buildProcess.on('close', (err, output) => {
+		if (err === 1) console.log(output)
+		cb()
+	})
 }
 
 async function copyRemoteDist(cb) {
@@ -182,7 +193,7 @@ function BasicTasks() {
 }
 
 function ElectronTasks() {
-	return [updatePluginsDependencies, removePluginsDist, createPluginsFolder, pluginsWebpack, pluginsSDK, pluginsTasks, copyLSPCMIcons]
+	return [updatePluginsDependencies, removePluginsDist, createPluginsFolder, pluginsWebpack, pluginsSDK, pluginsTasks]
 }
 
 function BrowserTasks() {
@@ -190,6 +201,7 @@ function BrowserTasks() {
 }
 
 const CommonTasks = [BasicTasks, ElectronTasks, BrowserTasks].flat()
+const MiscTasks = [copyLSPCMIcons]
 
 exports.default = CommonTasks
 
@@ -235,7 +247,7 @@ function ServeElectronInterface() {
 	)
 }
 function RunElectron() {
-	this.use(useElectron(path.join(__dirname, '..'), path.join(__dirname, '..', 'dist_main', 'main.js'), '--no-sandbox'))
+	this.use(useElectron(path.join(__dirname, '..'), path.join(__dirname, '..', 'dist_main', 'main.js'), ['--no-sandbox']))
 }
 function BuildWebpackPreload() {
 	this.use(useWebpack(path.join(__dirname, './preload_config')))
@@ -268,17 +280,22 @@ function WatchWebpackServer() {
 function BuildWebpackTesting() {
 	this.use(useWebpack(path.join(__dirname, './test_config')))
 }
+function BuildWebpackServer() {
+	this.use(useWebpack(path.join(__dirname, './server_config')))
+}
 
-exports.watchElectron = [...CommonTasks, BuildWebpackMain, WatchWebpackRenderer, ServeElectronInterface, RunElectron, BuildWebpackPreload, BuildWebpackBrowser]
+exports.watchElectron = [...CommonTasks, BuildWebpackMain, WatchWebpackRenderer, ServeElectronInterface, RunElectron, BuildWebpackPreload, BuildWebpackBrowser, ...MiscTasks]
 
-exports.buildElectron = [...CommonTasks, BuildWebpackMain, BuildWebpackRenderer, BuildWebpackPreload, BuildWebpackBrowser, BuildElectronBuilder]
+exports.buildElectron = [...CommonTasks, BuildWebpackMain, BuildWebpackRenderer, BuildWebpackPreload, BuildWebpackBrowser, ...MiscTasks, BuildElectronBuilder]
 
-exports.buildAllWebpackConfigs = [BuildWebpackMain, BuildWebpackRenderer, BuildWebpackPreload, BuildWebpackBrowser, BuildWebpackTesting]
+exports.buildAllWebpackConfigs = [BuildWebpackMain, BuildWebpackRenderer, BuildWebpackPreload, BuildWebpackBrowser, BuildWebpackTesting, ...MiscTasks]
 
 exports.watchBrowser = [...CommonTasks, ServeBrowserInterface, WatchWebpackBrowser]
 
 exports.buildBrowser = [...CommonTasks, BuildWebpackBrowser]
 
-exports.watchServer = [...CommonTasks, WatchWebpackServer, ServeBrowserInterface, WatchWebpackBrowser]
+exports.watchServer = [...CommonTasks, WatchWebpackServer, WatchWebpackBrowser]
 
-exports.buildTest = [...CommonTasks, BuildWebpackMain, BuildWebpackRenderer, BuildWebpackPreload, BuildWebpackBrowser, BuildWebpackTesting]
+exports.buildServer = [...CommonTasks, BuildWebpackServer, BuildWebpackBrowser]
+
+exports.buildTest = [...CommonTasks, ...MiscTasks, BuildWebpackMain, BuildWebpackRenderer, BuildWebpackPreload, BuildWebpackBrowser, BuildWebpackTesting]
