@@ -80,4 +80,4 @@ jobs:
         files: >
           dist/Graviton-Server_Linux
           dist/Graviton-Server_MacOS
-          dist/Graviton-Server_Windows
+          dist/Graviton-Server_Windows.exe
