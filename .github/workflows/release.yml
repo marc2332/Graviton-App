@@ -18,6 +18,7 @@ jobs:
       id: package-node-version
       uses: culshaw/read-package-node-version-actions@v1
     - name: Create Release
+      id: create_release
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -71,9 +72,12 @@ jobs:
     - name: Building the binaries
       run: yarn package:server
     - name: Upload binaries
-      uses: actions/upload-artifact@v2
+      uses: meeDamian/github-release@2.0
       with:
-        path: |
+        token: ${{ secrets.GH_TOKEN }}
+        tag: ${{ env.RELEASE_TAG }}
+        allow_override: true
+        files: >
           dist/Graviton-Server_Linux
           dist/Graviton-Server_MacOS
           dist/Graviton-Server_Windows
