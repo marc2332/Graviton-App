@@ -75,7 +75,7 @@ jobs:
       uses: meeDamian/github-release@2.0
       with:
         token: ${{ secrets.GH_TOKEN }}
-        tag: ${{ env.RELEASE_TAG }}
+        tag: "v${{ steps.package-node-version.outputs.version}}"
         allow_override: true
         files: >
           dist/Graviton-Server_Linux
