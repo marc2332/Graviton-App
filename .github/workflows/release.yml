@@ -79,4 +79,4 @@ jobs:
       with:
         repo-token: ${{ secrets.GH_TOKEN }}
         release-tag: "v${{ steps.package-node-version.outputs.version}}"
-        files: 'Graviton-Server*'
+        files: 'dist/Graviton-Server*'
